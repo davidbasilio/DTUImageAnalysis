@@ -12,8 +12,7 @@ def show_in_moved_window(win_name, img, x, y):
     cv2.moveWindow(win_name, x, y)
     cv2.imshow(win_name,img)
 
-
-def capture_from_camera_and_show_images():
+def capture_from_camera_and_show_images(threshold, A, alpha):
     print("Starting image capture")
 
     print("Opening connection to camera")
@@ -34,7 +33,7 @@ def capture_from_camera_and_show_images():
     if not ret:
         print("Can't receive frame")
         exit()
-
+        
     # Transform image to gray scale and then to float, so we can do some processing
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     frame_gray = img_as_float(frame_gray)
@@ -43,6 +42,7 @@ def capture_from_camera_and_show_images():
     start_time = time.time()
     n_frames = 0
     stop = False
+    print("Running loop...")
     while not stop:
         ret, new_frame = cap.read()
         if not ret:
@@ -53,8 +53,26 @@ def capture_from_camera_and_show_images():
         new_frame_gray = cv2.cvtColor(new_frame, cv2.COLOR_BGR2GRAY)
         new_frame_gray = img_as_float(new_frame_gray)
 
-        # Compute difference image
+        # Compute absolute difference image
         dif_img = np.abs(new_frame_gray - frame_gray)
+
+        # Creates a binnary image
+        ret, binary_image = cv2.threshold(dif_img, threshold, 255, cv2.THRESH_BINARY)
+
+        # Computes the foreground 
+        F = np.sum(binary_image == 255)
+
+        # Calculate the total number of pixels
+        height, width = binary_image.shape
+        total_pixels = height * width
+
+        # Compute the percentage of foreground pixels
+        percentage_of_F = F / total_pixels
+
+        if percentage_of_F > A:
+            str_out = "Change Detected!"
+            font = cv2.FONT_HERSHEY_COMPLEX
+            cv2.putText(dif_img, str_out, (100, 100), font, 1, 255, 1)
 
         # Keep track of frames-per-second (FPS)
         n_frames = n_frames + 1
@@ -67,12 +85,13 @@ def capture_from_camera_and_show_images():
         cv2.putText(new_frame, str_out, (100, 100), font, 1, 255, 1)
 
         # Display the resulting frame
-        show_in_moved_window('Input', new_frame, 0, 10)
+        show_in_moved_window('Input', new_frame , 0, 10)
         show_in_moved_window('Input gray', new_frame_gray, 600, 10)
-        show_in_moved_window('Difference image', dif_img, 1200, 10)
+        show_in_moved_window('Difference image', dif_img, 0, 400)
+        show_in_moved_window('Binary image', binary_image, 600, 400)
 
         # Old frame is updated
-        frame_gray = new_frame_gray
+        frame_gray = alpha*frame_gray + (1-alpha)*new_frame_gray
 
         if cv2.waitKey(1) == ord('q'):
             stop = True
@@ -82,4 +101,4 @@ def capture_from_camera_and_show_images():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    capture_from_camera_and_show_images()
+    capture_from_camera_and_show_images(0.1, 0.05, 0.95)
