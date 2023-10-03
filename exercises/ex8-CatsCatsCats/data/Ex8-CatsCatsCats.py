@@ -111,3 +111,10 @@ def create_u_byte_image_from_vector(im_vec, height, width, channels):
     im_vec = im_vec.reshape(height, width, channels)
     im_out = img_as_ubyte(im_vec)
     return im_out
+
+def main():
+    os.chdir(os.getcwd()+"\exercises\ex8-CatsCatsCats")
+    preprocess_one_cat()
+
+if __name__ == "__main__":
+    main()
