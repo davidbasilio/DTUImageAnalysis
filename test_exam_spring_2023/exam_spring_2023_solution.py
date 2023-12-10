@@ -1404,6 +1404,6 @@ if __name__ == '__main__':
     # filtering_F2023()
     # letters_blob_analysis_F2023()
     # kidney_pixel_analysis_F2023()
-    otsu_rotate_image_F2023()
+    # otsu_rotate_image_F2023()
     # landmark_based_registration_F2023()
-    # do_pca_on_all_images_in_directory_F2023()
+    do_pca_on_all_images_in_directory_F2023()
